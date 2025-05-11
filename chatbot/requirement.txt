@@ -1,0 +1,17 @@
+# Core requirements
+flask==3.0.2
+twilio==9.3.0
+
+# LLM & NLP dependencies
+transformers==4.40.0
+torch==2.2.1+cu121
+accelerate==0.29.2
+bitsandbytes==0.43.0
+sentencepiece==0.2.0
+
+# Additional utilities
+python-dotenv==1.0.1
+huggingface-hub==0.22.2
+
+# Production server (optional)
+gunicorn==21.2.0

@@ -16,8 +16,7 @@ MedSy combines three AI-powered modules to streamline clinical workflows:
 Each component has dedicated documentation:
 - [`/chatbot`](chatbot/README.md) - Twilio integration & Mistral-7B implementation  
 - [`/translation`](translator/README.md) - Real-time NLLB translation pipeline  
-- [`/triage`](triage/README.md) - Clinical priority assessment system
-
+- [`/triage`](triage/README.md) - Faster whisper + Mistral-7B implementation
 ## 🛠️ Quick Start
 ```bash
 # Clone repo

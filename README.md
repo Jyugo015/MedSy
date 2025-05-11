@@ -10,9 +10,13 @@ English (en), Malay (ms), Chinese (Traditional and Simplified) (zh, zh-CN), Tami
 ## Initial Setup
 This repo contains all the necessary files to run the MedSy multilingual translator.
 $ git clone https://github.com/your-username/medsy.git
+
 $ cd medsy
+
 $ cd translator
+
 $ python3 -m venv venv
+
 $ source venv/bin/activate # For Windows: venv\Scripts\activate
 
 ## Install dependencies

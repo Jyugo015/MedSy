@@ -8,6 +8,7 @@ Supported Languages:
 English (en), Malay (ms), Chinese (Traditional and Simplified) (zh, zh-CN), Tamil (ta)
 
 ## Initial Setup
+Python version required: Python 3.10
 This repo contains all the necessary files to run the MedSy multilingual translator.
 
 $ git clone https://github.com/your-username/medsy.git

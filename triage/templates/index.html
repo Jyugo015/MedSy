@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medical Translator</title>
+
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+      sizes="any"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='favicon-32x32.png') }}"
+      type="image/png"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='favicon-16x16.png') }}"
+      type="image/png"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      href="{{ url_for('static', filename='apple-touch-icon.png') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Medical Translator</h1>
+
+      <div class="panel">
+        <h2>Settings</h2>
+        <div class="form-group">
+          <label for="sourceLang">Source Language:</label>
+          <select id="sourceLang">
+            <option value="en">English</option>
+            <option value="zh-CN">华语简体 (Simplified Chinese)</option>
+            <option value="zh">中文繁體 (Traditional Chinese)</option>
+            <option value="ms">Malay</option>
+            <option value="ta">Tamil</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="targetLang">Target Language:</label>
+          <select id="targetLang">
+            <option value="zh-CN">华语简体 (Simplified Chinese)</option>
+            <option value="zh">中文繁體 (Traditional Chinese)</option>
+            <option value="ms">Malay</option>
+            <option value="ta">Tamil</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button id="recordBtn" class="btn">
+            <span class="icon"></span>
+            <span class="text">Speak</span>
+          </button>
+          <button id="stopBtn" class="btn btn-secondary" disabled>
+            <span class="icon"></span>
+            <span class="text">Stop</span>
+          </button>
+          <button id="uploadBtn" class="btn">
+            <span class="icon"></span>
+            <span class="text">Upload Audio</span>
+          </button>
+          <input
+            type="file"
+            id="audioUpload"
+            accept="audio/*"
+            style="display: none"
+          />
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Translation</h2>
+        <div class="form-group">
+          <label for="inputText">Original Text:</label>
+          <textarea
+            id="inputText"
+            rows="4"
+            placeholder="Speak to translate..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Translation:</label>
+          <div id="translation" class="result"></div>
+        </div>
+
+        <div id="audioContainer" style="display: none">
+          <label>Audio Output:</label>
+          <audio id="audioPlayer" class="audio-player" controls></audio>
+        </div>
+
+        <div id="error" class="error"></div>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>

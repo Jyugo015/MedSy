@@ -9,11 +9,16 @@ from dotenv import load_dotenv
 from functools import wraps
 from eth_account import Account
 from eth_account.messages import encode_defunct
+import time
+import requests
+import logging
 
 
 # Import services
 from services.ipfsService import ipfs_service
 from services.blockchainService import blockchain_service
+
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()  # Load environment variables
 
@@ -39,8 +44,6 @@ contract_address = os.getenv('CONTRACT_ADDRESS')
 
 # Load Contract ABI
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# with open(os.path.join(current_dir, '..', 'contracts', 'abi.json')) as f:
-#     abi = json.load(f)
 
 # In app.py, replace the ABI loading with:
 with open(os.path.join(current_dir,  'artifacts', 'contracts', 'MedicalRecord.sol', 'MedicalRecord.json')) as f:
@@ -82,77 +85,180 @@ def add_signed_record():
         ])
         if not is_authorized:
             return jsonify({'error': 'Unauthorized personnel'}), 403
+        
+        owner_address = os.getenv("OWNER_ADDRESS")
+        private_key = os.getenv("PRIVATE_KEY")
 
-        # Save to DB or IPFS metadata registry (not shown here)
-        return jsonify({"message": "Record verified and saved (off-chain)"}), 200
+        tx = contract.functions.addMedicalRecord(
+            Web3.to_checksum_address(data["patientAddress"]),
+            data["condition"],
+            data["diagnosis"],
+            data["treatment"],
+            data["ipfsHash"]
+        )
+        
+        built_tx = tx.build_transaction({
+            "from": owner_address,
+            "nonce": w3.eth.get_transaction_count(owner_address),
+            "gas": 3000000,
+            "gasPrice": Web3.to_wei("20", "gwei")
+        })
+
+        signed_tx = w3.eth.account.sign_transaction(built_tx, private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        w3.eth.wait_for_transaction_receipt(tx_hash)
+
+        return jsonify({ "status": "success", "tx_hash": tx_hash.hex() })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/patient/<patient_address>/records', methods=['GET'])
+def get_patient_records(patient_address):
+    IPFS_GATEWAY = "https://ipfs.io/ipfs/"
+    try:
+        viewer_address = request.args.get('viewer')
+        if not viewer_address:
+            return jsonify({"error": "Missing viewer address"}), 400
+
+        # Fetch records from smart contract (get IPFS hashes and timestamps)
+        raw_records = contract.functions.getPatientRecords(
+            Web3.to_checksum_address(patient_address)
+        ).call({'from': Web3.to_checksum_address(viewer_address)})
+
+        logging.info(raw_records)
+
+        full_records = []
+        for r in raw_records:
+            condition = r[0]
+            diagnosis = r[1]
+            treatment = r[2]
+            ipfs_hash = r[3]
+            timestamp = r[4]
+
+            try:
+                # Fetch the record JSON from IPFS
+                ipfs_url = f"{IPFS_GATEWAY}{ipfs_hash}"
+                response = requests.get(ipfs_url)
+                response.raise_for_status()
+                # record_data = response.json()
+
+                # Add IPFS metadata
+                # record_data['condition'] = condition
+                # record_data['diagnosis'] = diagnosis
+                # record_data['treatment'] = treatment
+                # record_data['ipfsHash'] = ipfs_hash
+                # record_data['timestamp'] = timestamp
+                record_data = {
+                    "condition": condition,
+                    "diagnosis": diagnosis,
+                    "treatment": treatment,
+                    "ipfsHash": ipfs_hash,
+                    "timestamp": timestamp,
+                    "fileUrl": ipfs_url  # Provide URL to front-end to fetch/display
+                }
+
+                full_records.append(record_data)
+
+            except Exception as e:
+                full_records.append({
+                    "error": f"Failed to fetch from IPFS: {str(e)}",
+                    "ipfsHash": ipfs_hash,
+                    "timestamp": timestamp
+                })
+
+        full_records.sort(key=lambda r: r.get("timestamp", 0), reverse=True)
+        return jsonify(full_records)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+# In-memory storage (replace with DB for production)
+patient_authorizations = {}
+
+@app.route('/api/patient/authorize', methods=['POST'])
+@token_required
+def authorize_access():
+    try:
+        payload = request.json
+        data = payload.get("data")
+        signature = payload.get("signature")
+        sender_address = Web3.to_checksum_address(request.headers.get("X-User-Address"))
+
+        if not data or not signature:
+            return jsonify({"error": "Missing data or signature"}), 400
+
+        # message = json.dumps(data)
+        # message_hash = Web3.keccak(text=message)
+        # recovered_address = w3.eth.account.recover_message(
+        #     encode_defunct(message_hash), signature=signature
+        # )
+
+        message = json.dumps(data, separators=(",", ":"), sort_keys=False)
+        message_encoded = encode_defunct(text=message)
+        recovered_address = w3.eth.account.recover_message(message_encoded, signature=signature)
+
+        if Web3.to_checksum_address(recovered_address) != sender_address:
+            return jsonify({"error": "Invalid signature"}), 403
+
+        # Store in memory (or database)
+        patient_authorizations[sender_address] = {
+            "signature": signature,
+            "message": data,
+            "timestamp": time.time()
+        }
+
+        return jsonify({"message": "Authorization stored"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-
-# @app.route('/api/records/prepare_tx', methods=['POST'])
+# @app.route('/api/records/<address>', methods=['GET'])
 # @token_required
-# def prepare_medical_record_tx():
+# def get_records(address):
 #     try:
-#         required_fields = ['patientAddress', 'condition', 'diagnosis', 'treatment', 'senderAddress']
-#         data = request.json
+#         caller_address = request.headers.get('X-User-Address')
 
-#         if not all(field in data for field in required_fields):
-#             return jsonify({'error': 'Missing required fields'}), 400
+#         is_owner = caller_address.lower() == address.lower()
+#         is_authorized = (
+#             contract.functions.isDoctor(caller_address).call() or
+#             contract.functions.isNurse(caller_address).call() or
+#             contract.functions.isStaff(caller_address).call()
+#         )
 
-#         patient_address = Web3.to_checksum_address(data['patientAddress'])
-#         sender_address = Web3.to_checksum_address(data['senderAddress'])
+#         if not (is_owner or is_authorized):
+#             return jsonify({'error': 'Unauthorized access'}), 403
 
-#         # Role check
-#         is_doctor = contract.functions.isDoctor(sender_address).call()
-#         is_nurse = contract.functions.isNurse(sender_address).call()
-#         is_staff = contract.functions.isStaff(sender_address).call()
+#         records = contract.functions.getPatientRecords(address).call()
 
-#         if not (is_doctor or is_nurse or is_staff):
-#             return jsonify({'error': 'Unauthorized'}), 403
-
-#         ipfs_hash = data.get('ipfsHash', '')
-
-#         nonce = w3.eth.get_transaction_count(sender_address)
-
-#         tx = contract.functions.addMedicalRecord(
-#             patient_address,
-#             data['condition'],
-#             data['diagnosis'],
-#             data['treatment'],
-#             ipfs_hash
-#         ).build_transaction({
-#             'from': sender_address,
-#             'nonce': nonce,
-#             'gas': 500000,
-#             'gasPrice': w3.to_wei('20', 'gwei')
-#         })
-
-#         tx['gas'] = Web3.to_hex(tx['gas'])
-#         tx['gasPrice'] = Web3.to_hex(tx['gasPrice'])
-#         tx['nonce'] = Web3.to_hex(tx['nonce'])
-
-#         return jsonify(tx), 200
+#         return jsonify({'blockchain_records': records}), 200
 
 #     except Exception as e:
 #         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/records/<address>', methods=['GET'])
 @token_required
 def get_records(address):
     try:
-        caller_address = request.headers.get('X-User-Address')
+        caller_address = Web3.to_checksum_address(request.headers.get('X-User-Address'))
+        patient_address = Web3.to_checksum_address(address)
 
-        is_owner = caller_address.lower() == address.lower()
+        is_owner = caller_address.lower() == patient_address.lower()
         is_authorized = (
             contract.functions.isDoctor(caller_address).call() or
             contract.functions.isNurse(caller_address).call() or
             contract.functions.isStaff(caller_address).call()
         )
 
-        if not (is_owner or is_authorized):
+        # Check if patient has signed authorization
+        patient_auth = patient_authorizations.get(patient_address)
+        valid_signature = False
+        if patient_auth:
+            message = json.dumps(patient_auth["message"])
+            message_hash = Web3.keccak(text=message)
+            recovered = w3.eth.account.recover_message(encode_defunct(message_hash), signature=patient_auth["signature"])
+            valid_signature = (Web3.to_checksum_address(recovered) == patient_address)
+
+        if not (is_owner or (is_authorized and valid_signature)):
             return jsonify({'error': 'Unauthorized access'}), 403
 
         records = contract.functions.getPatientRecords(address).call()
@@ -161,6 +267,7 @@ def get_records(address):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/upload_to_ipfs', methods=['POST'])
 def upload_to_ipfs():
@@ -180,6 +287,28 @@ def upload_to_ipfs():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/save_record_to_ipfs', methods=['POST'])
+def save_record_to_ipfs():
+    try:
+        json_data = request.get_json()
+        if not json_data:
+            return jsonify({'error': 'Missing JSON body'}), 400
+
+        # Convert to bytes
+        json_bytes = json.dumps(json_data).encode('utf-8')
+
+        # Upload the JSON to IPFS
+        ipfs_hash = ipfs_service.upload_file(json_bytes)
+
+        return jsonify({
+            'ipfsHash': ipfs_hash,
+            'ipfs_url': f"https://ipfs.io/ipfs/{ipfs_hash}",
+            'message': 'Metadata uploaded to IPFS'
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
     
 @app.route('/api/admin/add_role', methods=['POST'])
 @token_required

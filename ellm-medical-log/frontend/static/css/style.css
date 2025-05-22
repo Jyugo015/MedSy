@@ -54,7 +54,7 @@ h3 {
 
 .records-display {
   background: #f0f0f0;
-  padding: 1em;
+  padding: 0 1em;
   border-radius: 5px;
   white-space: pre-wrap;
 }

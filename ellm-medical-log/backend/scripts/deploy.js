@@ -17,7 +17,7 @@ async function main() {
     console.log("Contract deployed at:", deployedAddress);
 
     // Save contract address and ABI
-    const contractsDir = path.join(__dirname, "../frontend/src/contracts");
+    const contractsDir = path.join(__dirname, "../contracts");
     if (!fs.existsSync(contractsDir)) {
         fs.mkdirSync(contractsDir, { recursive: true });
     }

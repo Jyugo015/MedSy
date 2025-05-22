@@ -46,7 +46,7 @@ contract MedicalRecord {
         string memory _ipfsHash
     ) public {
         require(
-            doctors[msg.sender] || nurses[msg.sender] || staff[msg.sender],
+            msg.sender == owner || doctors[msg.sender] || nurses[msg.sender] || staff[msg.sender],
             "Not authorized to add"
         );
 

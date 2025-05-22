@@ -1,0 +1,14 @@
+[
+  "constructor()",
+  "function addMedicalRecord(address,string,string,string,string)",
+  "function assignRole(address,string)",
+  "function doctors(address) view returns (bool)",
+  "function getPatientRecords(address) view returns ((string,string,string,string,uint256)[])",
+  "function isDoctor(address) view returns (bool)",
+  "function isNurse(address) view returns (bool)",
+  "function isStaff(address) view returns (bool)",
+  "function nurses(address) view returns (bool)",
+  "function owner() view returns (address)",
+  "function patientRecords(address,uint256) view returns (string,string,string,string,uint256)",
+  "function staff(address) view returns (bool)"
+]

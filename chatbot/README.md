@@ -70,11 +70,23 @@ huggingface-cli login
 Ensure your project has this structure:
 
 ```
-project/
-├── app.py               # Main application file
-├── .env                 # Environment variables
-├── requirements.txt     # Python dependencies
-└── appointments/        # Will be created automatically
+chatbot/
+├── core/                     # Core application logic
+│   ├── __init__.py           # Package initialization
+│   ├── booking.py            # Appointment booking logic
+│   ├── llm.py                # Language model integration
+│   ├── state_manager.py      # Conversation state management
+│   └── validation.py         # Input validation utilities
+├── routes/                   # API route handlers
+│   ├── __init__.py           # Package initialization
+│   └── webhook.py            # Twilio webhook handler
+├── tests/                    # Test files
+│   ├── __init__.py           # Package initialization
+│   └── evaluate_triage.py    # Test cases
+├── main.py                   # Application entry point
+├── README.md                 # Project documentation
+├── requirements.txt          # Python dependencies
+└── slots.json                # Slot available
 ```
 
 ### 6. Running the Application
@@ -82,7 +94,7 @@ project/
 #### Development Mode:
 
 ```bash
-python app.py
+python main.py
 ```
 
 #### Production Mode (with Gunicorn):
@@ -95,7 +107,22 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 #### Local Testing:
 
 ```bash
-python app.py --local
+python main.py --local
+```
+
+## Key Components
+
+- **core/llm.py**: Handles all interactions with the Mistral-7B language model
+- **core/state_manager.py**: Manages conversation state and context
+- **core/booking.py**: Contains appointment booking business logic
+- **routes/webhook.py**: Processes incoming WhatsApp messages via Twilio webhook
+
+## Testing
+
+Run the test cases with:
+
+```bash
+python -m pytest tests/
 ```
 
 ### 7. Ngrok Setup (for local development)
@@ -108,6 +135,11 @@ ngrok http 5000
 ```
 
 3. Configure Twilio webhook to point to your ngrok URL (e.g., `https://your-ngrok-url.ngrok.io/webhook`)
+
+## Notes
+
+- The `slots.json` file contains predefined conversation slots for the booking flow
+- For local development, use ngrok to expose your local server to Twilio's webhook
 
 ## Configuration Options
 

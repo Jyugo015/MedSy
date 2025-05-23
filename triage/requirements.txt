@@ -18,9 +18,12 @@ onnxruntime>=1.16.0
 # ------------------------------------
 # LLM & NLP
 # ------------------------------------
-transformers==4.38.2
-accelerate==0.27.2
-bitsandbytes==0.41.3.post2     
+# transformers==4.38.2
+# accelerate==0.27.2
+# bitsandbytes==0.41.3.post2    
+transformers==4.41.1
+accelerate==0.29.3
+bitsandbytes==0.43.1 
 sentencepiece==0.2.0
 protobuf==3.20.3
 einops==0.7.0

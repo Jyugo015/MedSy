@@ -18,6 +18,7 @@ FLASK_PORT=5001
 ## open termianl
 cd backend
 npm install -g ganache
+
 ganache --chain.chainId 1337
 
 ## open another terminal

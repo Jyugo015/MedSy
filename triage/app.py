@@ -103,38 +103,11 @@ def transcribe_audio(audio_path: str) -> Dict[str, Any]:
 
         return {
             "text": transcription,
-            "language": result.get("language", "unknown"),
+            "language": result.get("language", "unknown").upper(),
             "duration": result.get("duration", 0),
             "processing_time": time.time() - start_time,
-            "word_count": len(transcription.split())
         }
 
-        # segments, info = models['whisper'].transcribe(
-        #     audio_path,
-        #     language=None,
-        #     beam_size=3,
-        #     vad_filter=Config.USE_VAD,
-        #     without_timestamps=True
-        # )
-
-        # transcription = " ".join(segment.text.strip() for segment in segments).strip()
-
-        # if not transcription:
-        #     return {
-        #         "text": "",
-        #         "language": info.language,
-        #         "duration": info.duration,
-        #         "processing_time": time.time() - start_time,
-        #         "word_count": 0
-        #     }
-
-        # return {
-        #     "text": transcription,
-        #     "language": info.language,
-        #     "duration": info.duration,
-        #     "processing_time": time.time() - start_time,
-        #     "word_count": len(transcription.split())
-        # }
 
     except Exception as e:
         print(f"Transcription error: {str(e)}")
@@ -293,7 +266,6 @@ def analyze_audio():
                 "language": transcription_result["language"],
                 "duration": transcription_result["duration"],
                 "processing_time": transcription_result["processing_time"],
-                "word_count": 0,
                 "medical_analysis": "No speech was detected in the audio. Please try again with a clear spoken input."
             })
 
@@ -305,7 +277,6 @@ def analyze_audio():
             "language": transcription_result["language"],
             "duration": transcription_result["duration"],
             "processing_time": transcription_result["processing_time"],
-            "word_count": transcription_result["word_count"],
             "medical_analysis": medical_analysis
         })
 

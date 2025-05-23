@@ -25,5 +25,7 @@ ganache --chain.chainId 1337
 npx hardhat run scripts/deploy.js --network localhost
 
 Deploying contract with address: xxx (copy and put at .env OWNER_ADDRESS)
+
 Contract deployed at: xxx (copy and put at .env CONTRACT_ADDRESS)
+
 Go to previous terminal, copy and put PRIVATE KEY .env based on OWNER_ADDRESS

@@ -1,0 +1,1 @@
+from .routes import medical_log_bp

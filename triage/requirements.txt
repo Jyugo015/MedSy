@@ -1,17 +1,43 @@
-# Core requirements
-flask==3.0.2
+# ------------------------------------
+# Core Flask & Web (from PyPI)
+# ------------------------------------
+flask==2.3.3
 twilio==9.3.0
-
-# LLM & NLP dependencies
-transformers==4.40.0
-torch==2.2.1+cu121
-accelerate==0.29.2
-bitsandbytes==0.43.0
-sentencepiece==0.2.0
-
-# Additional utilities
-python-dotenv==1.0.1
-huggingface-hub==0.22.2
-
-# Production server (optional)
 gunicorn==21.2.0
+gevent==23.9.1
+python-dotenv==1.0.1
+
+# ------------------------------------
+# ASR & Audio Processing
+# ------------------------------------
+# faster-whisper==0.10.1
+openai-whisper @ git+https://github.com/openai/whisper.git
+ffmpeg-python==0.2.0
+onnxruntime>=1.16.0
+
+# ------------------------------------
+# LLM & NLP
+# ------------------------------------
+transformers==4.38.2
+accelerate==0.27.2
+bitsandbytes==0.41.3.post2     
+sentencepiece==0.2.0
+protobuf==3.20.3
+einops==0.7.0
+huggingface-hub==0.20.3
+
+# ------------------------------------
+# Torch Packages (CUDA 11.8 build)
+# ------------------------------------
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.2.1+cu118
+torchvision==0.17.1+cu118
+torchaudio==2.2.1+cu118
+
+# ------------------------------------
+# Utilities
+# ------------------------------------
+numpy==1.26.4
+tqdm==4.66.2
+scipy==1.12.0
+requests==2.31.0

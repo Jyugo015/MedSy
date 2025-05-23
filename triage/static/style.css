@@ -236,27 +236,6 @@ h2 {
     box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
 }
 
-.analyze-btn {
-    background: var(--success);
-    color: white;
-}
-
-.analyze-btn:hover {
-    background: #38bdf8;
-    transform: translateY(-2px);
-}
-
-.word-count {
-    position: absolute;
-    bottom: 0.5rem;
-    right: 0.5rem;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    color: var(--gray);
-}
-
 .summary-display {
     background: #f8f9fa;
     border-radius: 12px;

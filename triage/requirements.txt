@@ -27,7 +27,7 @@ bitsandbytes==0.43.1
 sentencepiece==0.2.0
 protobuf==3.20.3
 einops==0.7.0
-huggingface-hub==0.20.3
+huggingface-hub>=0.23.0,<1.0
 
 # ------------------------------------
 # Torch Packages (CUDA 11.8 build)

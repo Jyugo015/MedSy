@@ -10,7 +10,6 @@ const stopButton = document.getElementById('stopRecording');
 const textArea = document.getElementById('transcriptionResult');
 const detectedLanguage = document.getElementById('detectedLanguage');
 const recordingStatus = document.getElementById('recordingStatus');
-const wordCountElement = document.getElementById('wordCount');
 const summaryText = document.getElementById('medicalSummary');
 const pulseElement = document.querySelector('.pulse');
 
@@ -40,7 +39,6 @@ function animateStatusText(baseText) {
 function clearTranscription() {
     textArea.value = "";
     detectedLanguage.textContent = "-";
-    wordCountElement.textContent = "0";
     summaryText.value = "";
     autoResizeTextarea(textArea);
     autoResizeTextarea(summaryText);
@@ -209,7 +207,6 @@ stopButton.addEventListener('click', async () => {
         autoResizeTextarea(textArea);
 
         detectedLanguage.textContent = result.language || "-";
-        wordCountElement.textContent = result.word_count || "0";
 
         summaryText.value = cleanText(result.medical_analysis || "[No analysis]");
         autoResizeTextarea(summaryText);

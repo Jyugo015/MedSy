@@ -4,10 +4,15 @@
 
 ## create .env
 BLOCKCHAIN_RPC_URL=http://127.0.0.1:8545
+
 CONTRACT_ADDRESS=
+
 FLASK_DEBUG=True
+
 OWNER_ADDRESS=
+
 PRIVATE_KEY=
+
 FLASK_PORT=5001
 
 ## open termianl

@@ -172,103 +172,6 @@ def get_patient_records(patient_address):
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-# In-memory storage (replace with DB for production)
-patient_authorizations = {}
-
-@app.route('/api/patient/authorize', methods=['POST'])
-@token_required
-def authorize_access():
-    try:
-        payload = request.json
-        data = payload.get("data")
-        signature = payload.get("signature")
-        sender_address = Web3.to_checksum_address(request.headers.get("X-User-Address"))
-
-        if not data or not signature:
-            return jsonify({"error": "Missing data or signature"}), 400
-
-        # message = json.dumps(data)
-        # message_hash = Web3.keccak(text=message)
-        # recovered_address = w3.eth.account.recover_message(
-        #     encode_defunct(message_hash), signature=signature
-        # )
-
-        message = json.dumps(data, separators=(",", ":"), sort_keys=False)
-        message_encoded = encode_defunct(text=message)
-        recovered_address = w3.eth.account.recover_message(message_encoded, signature=signature)
-
-        if Web3.to_checksum_address(recovered_address) != sender_address:
-            return jsonify({"error": "Invalid signature"}), 403
-
-        # Store in memory (or database)
-        patient_authorizations[sender_address] = {
-            "signature": signature,
-            "message": data,
-            "timestamp": time.time()
-        }
-
-        return jsonify({"message": "Authorization stored"}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# @app.route('/api/records/<address>', methods=['GET'])
-# @token_required
-# def get_records(address):
-#     try:
-#         caller_address = request.headers.get('X-User-Address')
-
-#         is_owner = caller_address.lower() == address.lower()
-#         is_authorized = (
-#             contract.functions.isDoctor(caller_address).call() or
-#             contract.functions.isNurse(caller_address).call() or
-#             contract.functions.isStaff(caller_address).call()
-#         )
-
-#         if not (is_owner or is_authorized):
-#             return jsonify({'error': 'Unauthorized access'}), 403
-
-#         records = contract.functions.getPatientRecords(address).call()
-
-#         return jsonify({'blockchain_records': records}), 200
-
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-
-@app.route('/api/records/<address>', methods=['GET'])
-@token_required
-def get_records(address):
-    try:
-        caller_address = Web3.to_checksum_address(request.headers.get('X-User-Address'))
-        patient_address = Web3.to_checksum_address(address)
-
-        is_owner = caller_address.lower() == patient_address.lower()
-        is_authorized = (
-            contract.functions.isDoctor(caller_address).call() or
-            contract.functions.isNurse(caller_address).call() or
-            contract.functions.isStaff(caller_address).call()
-        )
-
-        # Check if patient has signed authorization
-        patient_auth = patient_authorizations.get(patient_address)
-        valid_signature = False
-        if patient_auth:
-            message = json.dumps(patient_auth["message"])
-            message_hash = Web3.keccak(text=message)
-            recovered = w3.eth.account.recover_message(encode_defunct(message_hash), signature=patient_auth["signature"])
-            valid_signature = (Web3.to_checksum_address(recovered) == patient_address)
-
-        if not (is_owner or (is_authorized and valid_signature)):
-            return jsonify({'error': 'Unauthorized access'}), 403
-
-        records = contract.functions.getPatientRecords(address).call()
-
-        return jsonify({'blockchain_records': records}), 200
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
 @app.route('/api/upload_to_ipfs', methods=['POST'])
 def upload_to_ipfs():
     if 'file' not in request.files:
@@ -287,28 +190,6 @@ def upload_to_ipfs():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
-@app.route('/api/save_record_to_ipfs', methods=['POST'])
-def save_record_to_ipfs():
-    try:
-        json_data = request.get_json()
-        if not json_data:
-            return jsonify({'error': 'Missing JSON body'}), 400
-
-        # Convert to bytes
-        json_bytes = json.dumps(json_data).encode('utf-8')
-
-        # Upload the JSON to IPFS
-        ipfs_hash = ipfs_service.upload_file(json_bytes)
-
-        return jsonify({
-            'ipfsHash': ipfs_hash,
-            'ipfs_url': f"https://ipfs.io/ipfs/{ipfs_hash}",
-            'message': 'Metadata uploaded to IPFS'
-        }), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
     
 @app.route('/api/admin/add_role', methods=['POST'])
 @token_required
